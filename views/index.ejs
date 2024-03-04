@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+</head>
+<body>
+    <h1>Upload a File</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="uploadedFile" id="fileInput">
+        <button type="button" onclick="uploadFile()">Upload</button>
+        <button type="button" onclick="downloadFile()">download</button>
+    </form>
+    <p id="status"></p>
+
+    <script>
+        function uploadFile() {
+            var fileInput = document.getElementById('fileInput');
+            var files = fileInput.files;
+            var formData = new FormData();
+
+            if (files.length === 0) {
+                document.getElementById('status').innerText = 'Please select a file.';
+                return;
+            }
+
+            formData.append('uploadedFile', files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(message => {
+                document.getElementById('status').innerText = message;
+            })
+            .catch(error => {
+                console.error(' client side Error:', error);
+            });
+        }
+
+        // Define a function to download the file
+        async function downloadFile() {
+                var fileInput = document.getElementById('fileInput');
+                let filename;
+                // Check if files are selected
+                if (fileInput.files.length > 0) {
+                    // Access the first file selected
+                    filename = fileInput.files[0].name;
+                    console.log('Filename:', filename);
+                } else {
+                    console.log('No file selected');
+                }
+
+                try {
+                    const response = await fetch(`/download/${filename}`);
+                    console.log('reponse image:',response.status)
+
+                    if (!response.ok) {
+                        throw new Error('Failed to download file');
+                    }
+
+                    const blob = await response.blob();
+
+                    const url = window.URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+
+                    a.href = url;
+
+                    a.download = filename;
+
+                    document.body.appendChild(a);
+
+                    a.click();
+
+                    document.body.removeChild(a);
+
+                } catch (error) {
+                    console.error('Error downloading file:', error);
+                }
+            }
+    </script>
+</body>
+</html>
+
